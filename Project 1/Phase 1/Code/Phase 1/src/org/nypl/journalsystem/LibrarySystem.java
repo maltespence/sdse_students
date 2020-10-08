@@ -37,6 +37,6 @@ public class LibrarySystem {
 		
 		librarySystem.load();
 		librarySystem.listContents();
-		System.out.println("I Run the test test version of this software");
+		System.out.println("I should not be online");
 	}
 }
