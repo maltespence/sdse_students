@@ -9,42 +9,14 @@ public class PasswordGenerator implements IPasswordGenerator {
 	
 	HashMap<CharacterSet,String> characterMap = new HashMap<CharacterSet,String>();
 	
-	public void generateCharacterMap(HashSet<CharacterSet> characterSets) {
+	public void generateCharacterMap() {
 		// Generate hashmap containing only allowed characters
-		for(CharacterSet charset : characterSets) {
-			switch(charset) {
-			case DIGITS:
-				if(!characterMap.containsKey(charset)) {
-					characterMap.put(CharacterSet.DIGITS,"0123456789");
-				}
-				break;
-			case LOWER_CASE:
-				if(!characterMap.containsKey(charset)) {
-				characterMap.put(CharacterSet.LOWER_CASE,"abcdefghijklmnopqrstuvwxyz");
-				}
-				break;
-			case UPPER_CASE:
-				if(!characterMap.containsKey(charset)) {
-				characterMap.put(CharacterSet.UPPER_CASE,"ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-				}
-				break;
-			case MINUS:
-				if(!characterMap.containsKey(charset)) {
-				characterMap.put(CharacterSet.MINUS,"-");
-				}
-				break;
-			case UNDERSCORE:
-				if(!characterMap.containsKey(charset)) {
-				characterMap.put(CharacterSet.UNDERSCORE,"_");
-				}
-				break;
-			case SPACE:
-				if(!characterMap.containsKey(charset)) {
-				characterMap.put(CharacterSet.SPACE," ");
-				}
-				break;
-			}
-		}
+		characterMap.put(CharacterSet.DIGITS,"0123456789");
+		characterMap.put(CharacterSet.LOWER_CASE,"abcdefghijklmnopqrstuvwxyz");
+		characterMap.put(CharacterSet.UPPER_CASE,"ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+		characterMap.put(CharacterSet.MINUS,"-");
+		characterMap.put(CharacterSet.UNDERSCORE,"_");
+		characterMap.put(CharacterSet.SPACE," ");
 	}
 	
 	@Override
@@ -52,15 +24,16 @@ public class PasswordGenerator implements IPasswordGenerator {
 		String pw = "";
 		String characterString = "";
 		
-		// Check if charactersets have been set, and length is >= 0
+		// Check if characterSets have been set, and length is >= 0
 		if (characterSets == null || characterSets.isEmpty() || length<0) {
 			return "";
 		}
 
 		//Generate HashSet from characterSets to ensure no duplicates. Then generate hashmap
 		HashSet<CharacterSet> characterSetsCleaned = new HashSet<CharacterSet>(characterSets);
-		generateCharacterMap(characterSetsCleaned);
+		generateCharacterMap();
 		
+		//TODO: Implement an option that ensures that at least one of each characterset is used.
 		for(CharacterSet charset : characterSetsCleaned) {
 			characterString = characterString + characterMap.get(charset);
 		}
