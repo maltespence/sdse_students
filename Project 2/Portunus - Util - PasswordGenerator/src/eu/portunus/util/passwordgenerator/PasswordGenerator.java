@@ -33,17 +33,17 @@ public class PasswordGenerator implements IPasswordGenerator {
 		HashSet<CharacterSet> characterSetsCleaned = new HashSet<CharacterSet>(characterSets);
 		generateCharacterMap();
 		
-		//TODO: Implement an option that ensures that at least one of each characterset is used.
+		//Iterate through the positions in the password.
 		for(CharacterSet charset : characterSetsCleaned) {
 			characterString = characterString + characterMap.get(charset);
 		}
-			
+		
 		Random randomizer = new Random();
 		for(int i = 0; i<length; i++) {
 			int l = characterString.length();
 			int r = randomizer.nextInt(l);
 			pw = pw + characterString.charAt(r);
 		}
-		return pw;	
+		return pw;
 	}
 }

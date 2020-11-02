@@ -1,14 +1,23 @@
 package eu.portunus.util.passwordgenerator.test;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import eu.portunus.util.passwordgenerator.CharacterSet;
 import eu.portunus.util.passwordgenerator.PasswordGenerator;
 
 public class PasswordGeneratorTest {
-	PasswordGenerator pwgen = new PasswordGenerator();
-	ArrayList<CharacterSet> charsets = new ArrayList<CharacterSet>();
+	PasswordGenerator pwgen;
+	ArrayList<CharacterSet> charsets;
+	
+	@BeforeEach
+	public void InitiatePasswordGenerator() {
+		charsets = new ArrayList<CharacterSet>();
+		pwgen = new PasswordGenerator();
+	}
+	
 	
 	// Check if password length matches the input required length
 	@Test
@@ -19,7 +28,7 @@ public class PasswordGeneratorTest {
 		assertEquals(10, pw.length());
 	}
 
-	// Check output if no characterSets provided. Output must be 0.
+	// Check output if no characterSets provided. Output must be empty string.
 	@Test
 	public void noCharacterSetsTest() {
 		charsets.clear();
@@ -76,5 +85,4 @@ public class PasswordGeneratorTest {
 		// I do not know how to automatically validate this test. As such, it is manual.
 		// I cannot guarantee, that one entry from each CharacterSet is part of the password.
 	}
-
 }
