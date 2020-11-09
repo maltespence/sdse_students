@@ -13,11 +13,17 @@ public abstract class AbstractPasswordLibraryLoader implements IPasswordLibraryL
 
 	@Override
 	public IPasswordLibrary load(File file, String masterPassword, IPasswordLibrary passwordLibrary) throws FileNotFoundException, DecryptionFailedException {
+		
+		// Get string from file
 		String encryptedXMLContent = loadFromFile(file);
+		
+		// Decrypt datastring
 		String decryptedXMLContent = decryptXMLContent(encryptedXMLContent, masterPassword);
 		
+		// Transfer data to data model.
 		decodeFromXML(decryptedXMLContent, passwordLibrary);
 		
+		// Output is a passwordLibrary class containing the relevant objects.
 		return passwordLibrary;
 	}
 
