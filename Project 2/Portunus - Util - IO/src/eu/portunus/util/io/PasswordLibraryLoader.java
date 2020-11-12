@@ -1,7 +1,5 @@
 package eu.portunus.util.io;
 
-import static org.junit.Assert.fail;
-
 import java.io.StringReader;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -29,16 +27,12 @@ public class PasswordLibraryLoader extends AbstractPasswordLibraryLoader {
 		return encryptedXMLContent;
 	}
 	
-	private IPasswordGroup addPasswordGroup(Node tempNode, Object parentObject) {
+	private IPasswordGroup addPasswordGroup(Node tempNode, IPasswordEntryContainer parentContainer) {
 		// Create Entry
 			IPasswordGroup entry = new PasswordGroup();
 		
 		// Add entry to parentObject (Library or group)
-			if(parentObject instanceof IPasswordLibrary) {
-				((IPasswordLibrary) parentObject).addEntry(entry);
-			} else if (parentObject instanceof IPasswordGroup) {
-				((IPasswordGroup) parentObject).addEntry(entry);
-			}
+			parentContainer.addEntry(entry);
 		
 		// Add Attributes to entry
 			if (tempNode.hasAttributes()) {
@@ -56,17 +50,13 @@ public class PasswordLibraryLoader extends AbstractPasswordLibraryLoader {
 		//System.out.println("[CREATED GROUP] : " + entry.getTitle() +" inside "+ parentObject.getClass());
 		return  entry;
 	}
-	private void addPasswordRecord(Node tempNode, Object parentObject) {
+	private void addPasswordRecord(Node tempNode, IPasswordEntryContainer parentContainer) {
 		
 		// Create Entry
 			PasswordRecord entry = new PasswordRecord();
 		
 		// Add entry to parent Object (Library or group)
-			if(parentObject instanceof IPasswordLibrary) {
-				((IPasswordLibrary) parentObject).addEntry(entry);
-			} else if (parentObject instanceof IPasswordGroup) {
-				((IPasswordGroup) parentObject).addEntry(entry);
-			}
+			parentContainer.addEntry(entry);
 		
 		// Add attributes to new entry
 			if (tempNode.hasAttributes()) {
@@ -95,10 +85,8 @@ public class PasswordLibraryLoader extends AbstractPasswordLibraryLoader {
 		//System.out.println("[CREATED RECORD] : " + entry.getTitle() +" inside "+ parentObject.getClass());
 	}
 	
-	
 	private void parseToPasswordLibrary(NodeList nodeList, IPasswordEntryContainer parentContainer) {
 		IPasswordEntryContainer currentObject = parentContainer;
-		
 		//System.out.println("[INSIDE CONTAINER] : " + parentContainer.getClass());
 		
 		// Iterate through each node in nodeList
@@ -120,17 +108,16 @@ public class PasswordLibraryLoader extends AbstractPasswordLibraryLoader {
 			        	addPasswordRecord(tempNode, parentContainer);
 					} 
 			    // Handle child entries
-		        if (tempNode.hasChildNodes()) {
-	        		//System.out.println("[OPEN CHILD NODE OF] : " + tempNode.getNodeName());
-	        		parseToPasswordLibrary(tempNode.getChildNodes(),currentObject);
-		            //System.out.println("[CLOSE CHILD NODE OF]" + tempNode.getNodeName());
-		        }
-		        //System.out.println("[CLOSE NODE] : " + tempNode.getNodeName() + " [CLOSE]");
+			        if (tempNode.hasChildNodes()) {
+		        		//System.out.println("[OPEN CHILD NODE OF] : " + tempNode.getNodeName());
+		        		parseToPasswordLibrary(tempNode.getChildNodes(),currentObject);
+			            //System.out.println("[CLOSE CHILD NODE OF]" + tempNode.getNodeName());
+			        }
+			        //System.out.println("[CLOSE NODE] : " + tempNode.getNodeName() + " [CLOSE]");
 		    }
 		}
 	}
-	
-	
+		
 	@Override
 	protected void decodeFromXML(String xmlContent, IPasswordLibrary passwordLibrary) {
 		try {
