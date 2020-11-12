@@ -17,17 +17,20 @@ import eu.portnus.model.PasswordRecord;
 import eu.portunus.core.IPasswordEntryContainer;
 import eu.portunus.core.IPasswordGroup;
 import eu.portunus.core.IPasswordLibrary;
+import eu.portunus.util.crypter.AESCrypter;
 import eu.portunus.util.crypter.DecryptionFailedException;
+import eu.portunus.util.crypter.ICrypter;
 
 public class PasswordLibraryLoader extends AbstractPasswordLibraryLoader {
 	
 	@Override
 	protected String decryptXMLContent(String encryptedXMLContent, String masterPassword) throws DecryptionFailedException {
-		// TODO: Decrypt XML content.		
-		return encryptedXMLContent;
+		ICrypter crypter = new AESCrypter();
+		String decryptedXMLContent = crypter.decrypt(encryptedXMLContent, masterPassword);
+		return decryptedXMLContent;
 	}
 	
-	private IPasswordGroup addPasswordGroup(Node tempNode, IPasswordEntryContainer parentContainer) {
+	private IPasswordGroup loadPasswordGroup(Node tempNode, IPasswordEntryContainer parentContainer) {
 		// Create Entry
 			IPasswordGroup entry = new PasswordGroup();
 		
@@ -50,7 +53,7 @@ public class PasswordLibraryLoader extends AbstractPasswordLibraryLoader {
 		//System.out.println("[CREATED GROUP] : " + entry.getTitle() +" inside "+ parentObject.getClass());
 		return  entry;
 	}
-	private void addPasswordRecord(Node tempNode, IPasswordEntryContainer parentContainer) {
+	private void loadPasswordRecord(Node tempNode, IPasswordEntryContainer parentContainer) {
 		
 		// Create Entry
 			PasswordRecord entry = new PasswordRecord();
@@ -85,7 +88,7 @@ public class PasswordLibraryLoader extends AbstractPasswordLibraryLoader {
 		//System.out.println("[CREATED RECORD] : " + entry.getTitle() +" inside "+ parentObject.getClass());
 	}
 	
-	private void parseToPasswordLibrary(NodeList nodeList, IPasswordEntryContainer parentContainer) {
+	private void loadEntriesFromXML(NodeList nodeList, IPasswordEntryContainer parentContainer) {
 		IPasswordEntryContainer currentObject = parentContainer;
 		//System.out.println("[INSIDE CONTAINER] : " + parentContainer.getClass());
 		
@@ -101,16 +104,16 @@ public class PasswordLibraryLoader extends AbstractPasswordLibraryLoader {
 		        
 		        // If PasswordGroup, create new PasswordGroup and return object.
 			        if(tempNode.getNodeName() == "PasswordGroup") {
-			        	currentObject = addPasswordGroup(tempNode, parentContainer);
+			        	currentObject = loadPasswordGroup(tempNode, parentContainer);
 			        }
 		        // Else if PasswordRecord, create new PasswordRecord (void)
 			        else if(tempNode.getNodeName() == "PasswordRecord") {
-			        	addPasswordRecord(tempNode, parentContainer);
+			        	loadPasswordRecord(tempNode, parentContainer);
 					} 
 			    // Handle child entries
 			        if (tempNode.hasChildNodes()) {
 		        		//System.out.println("[OPEN CHILD NODE OF] : " + tempNode.getNodeName());
-		        		parseToPasswordLibrary(tempNode.getChildNodes(),currentObject);
+		        		loadEntriesFromXML(tempNode.getChildNodes(),currentObject);
 			            //System.out.println("[CLOSE CHILD NODE OF]" + tempNode.getNodeName());
 			        }
 			        //System.out.println("[CLOSE NODE] : " + tempNode.getNodeName() + " [CLOSE]");
@@ -129,7 +132,7 @@ public class PasswordLibraryLoader extends AbstractPasswordLibraryLoader {
 		    doc.getDocumentElement().normalize();
 
 		    if(doc.hasChildNodes()) {
-		    	parseToPasswordLibrary(doc.getChildNodes(), passwordLibrary);
+		    	loadEntriesFromXML(doc.getChildNodes(), passwordLibrary);
 		    }
 		    System.out.println("Library successfully loaded!");
 	    } catch (Exception e) {
