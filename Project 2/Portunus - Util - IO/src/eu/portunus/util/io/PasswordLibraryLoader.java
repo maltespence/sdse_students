@@ -1,5 +1,7 @@
 package eu.portunus.util.io;
 
+import static org.junit.Assert.fail;
+
 import java.io.StringReader;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -14,6 +16,8 @@ import org.xml.sax.InputSource;
 
 import eu.portnus.model.PasswordGroup;
 import eu.portnus.model.PasswordRecord;
+import eu.portunus.core.IPasswordEntryContainer;
+import eu.portunus.core.IPasswordGroup;
 import eu.portunus.core.IPasswordLibrary;
 import eu.portunus.util.crypter.DecryptionFailedException;
 
@@ -25,80 +29,103 @@ public class PasswordLibraryLoader extends AbstractPasswordLibraryLoader {
 		return encryptedXMLContent;
 	}
 	
-	private void addPasswordGroup(Node tempNode) {
-		PasswordGroup entry = new PasswordGroup();
-		if (tempNode.hasAttributes()) {
-
-            // get attributes names and values
-            NamedNodeMap nodeMap = tempNode.getAttributes();            
-            for (int i = 0; i < nodeMap.getLength(); i++) {
-                Node node = nodeMap.item(i);
-                switch(node.getNodeName()) {
-                	case "title":
-                		entry.setTitle(node.getNodeValue());
-                		break;
-                }	
-                System.out.println(node.getNodeName() + " : " + node.getNodeValue() + "[GROUP CREATED]");
-            }
-        }
-		//TODO: Add to group
+	private IPasswordGroup addPasswordGroup(Node tempNode, Object parentObject) {
+		// Create Entry
+			IPasswordGroup entry = new PasswordGroup();
+		
+		// Add entry to parentObject (Library or group)
+			if(parentObject instanceof IPasswordLibrary) {
+				((IPasswordLibrary) parentObject).addEntry(entry);
+			} else if (parentObject instanceof IPasswordGroup) {
+				((IPasswordGroup) parentObject).addEntry(entry);
+			}
+		
+		// Add Attributes to entry
+			if (tempNode.hasAttributes()) {
+	            NamedNodeMap nodeMap = tempNode.getAttributes();            
+	            for (int i = 0; i < nodeMap.getLength(); i++) {
+	                Node node = nodeMap.item(i);
+	                switch(node.getNodeName()) {
+	                	case "title":
+	                		entry.setTitle(node.getNodeValue());
+	                		break;
+	                }	
+	            }
+	        }
+		
+		//System.out.println("[CREATED GROUP] : " + entry.getTitle() +" inside "+ parentObject.getClass());
+		return  entry;
 	}
-	private void addPasswordRecord(Node tempNode) {
-		PasswordRecord entry = new PasswordRecord();
-		if (tempNode.hasAttributes()) {
-            // get attributes names and values
-            NamedNodeMap nodeMap = tempNode.getAttributes();            
-            for (int i = 0; i < nodeMap.getLength(); i++) {
-                Node node = nodeMap.item(i);
-                switch(node.getNodeName()) {
-                	case "title":
-                		entry.setTitle(node.getNodeValue());
-                		break;
-                	case "user":
-                		entry.setUser(node.getNodeValue());
-                		break;
-                	case "password":
-                		entry.setTitle(node.getNodeValue());
-                		break;
-                	case "url":
-                		entry.setTitle(node.getNodeValue());
-                		break;
-                	case "notes":
-                		entry.setTitle(node.getNodeValue());
-                		break;
-                }	
-                System.out.println(node.getNodeName() + " : " + node.getNodeValue() + "[RECORD CREATED]");
-            }
-        }
-		//TODO: Add to group.
+	private void addPasswordRecord(Node tempNode, Object parentObject) {
+		
+		// Create Entry
+			PasswordRecord entry = new PasswordRecord();
+		
+		// Add entry to parent Object (Library or group)
+			if(parentObject instanceof IPasswordLibrary) {
+				((IPasswordLibrary) parentObject).addEntry(entry);
+			} else if (parentObject instanceof IPasswordGroup) {
+				((IPasswordGroup) parentObject).addEntry(entry);
+			}
+		
+		// Add attributes to new entry
+			if (tempNode.hasAttributes()) {
+	            NamedNodeMap nodeMap = tempNode.getAttributes();            
+	            for (int i = 0; i < nodeMap.getLength(); i++) {
+	                Node node = nodeMap.item(i);
+	                switch(node.getNodeName()) {
+	                	case "title":
+	                		entry.setTitle(node.getNodeValue());
+	                		break;
+	                	case "user":
+	                		entry.setUser(node.getNodeValue());
+	                		break;
+	                	case "password":
+	                		entry.setPassword(node.getNodeValue());
+	                		break;
+	                	case "url":
+	                		entry.setUrl(node.getNodeValue());
+	                		break;
+	                	case "notes":
+	                		entry.setNotes(node.getNodeValue());
+	                		break;
+	                }	
+	            }
+	        }
+		//System.out.println("[CREATED RECORD] : " + entry.getTitle() +" inside "+ parentObject.getClass());
 	}
 	
 	
-	private void parseToPasswordLibrary(NodeList nodeList) {
-		// Itterate through each node in nodelist
+	private void parseToPasswordLibrary(NodeList nodeList, IPasswordEntryContainer parentContainer) {
+		IPasswordEntryContainer currentObject = parentContainer;
+		
+		//System.out.println("[INSIDE CONTAINER] : " + parentContainer.getClass());
+		
+		// Iterate through each node in nodeList
 		for (int count = 0; count < nodeList.getLength(); count++) {
 
 		    Node tempNode = nodeList.item(count);
 
 		    // make sure it's element node.
 		    if (tempNode instanceof Element) {
-		        // get node name and value
-		        System.out.println("\nNode Name =" + tempNode.getNodeName() + " [OPEN]");
+		        // Open node
+		        	//System.out.println("[OPEN NODE] : " + tempNode.getNodeName());
 		        
-		        if(tempNode.getNodeName() == "PasswordGroup") {
-		        	addPasswordGroup(tempNode);
-		        }
-		        else if(tempNode.getNodeName() == "PasswordRecord") {
-		        	addPasswordRecord(tempNode);
-				}
-
+		        // If PasswordGroup, create new PasswordGroup and return object.
+			        if(tempNode.getNodeName() == "PasswordGroup") {
+			        	currentObject = addPasswordGroup(tempNode, parentContainer);
+			        }
+		        // Else if PasswordRecord, create new PasswordRecord (void)
+			        else if(tempNode.getNodeName() == "PasswordRecord") {
+			        	addPasswordRecord(tempNode, parentContainer);
+					} 
+			    // Handle child entries
 		        if (tempNode.hasChildNodes()) {
-		            // loop again if has child nodes
-		            parseToPasswordLibrary(tempNode.getChildNodes());
-
+	        		//System.out.println("[OPEN CHILD NODE OF] : " + tempNode.getNodeName());
+	        		parseToPasswordLibrary(tempNode.getChildNodes(),currentObject);
+		            //System.out.println("[CLOSE CHILD NODE OF]" + tempNode.getNodeName());
 		        }
-		        
-		        System.out.println("Node Name = " + tempNode.getNodeName() + " [CLOSE]");
+		        //System.out.println("[CLOSE NODE] : " + tempNode.getNodeName() + " [CLOSE]");
 		    }
 		}
 	}
@@ -106,7 +133,6 @@ public class PasswordLibraryLoader extends AbstractPasswordLibraryLoader {
 	
 	@Override
 	protected void decodeFromXML(String xmlContent, IPasswordLibrary passwordLibrary) {
-		//TODO: Read (plain text) XML content and fill the password library with the respective records and groups.
 		try {
 			// Set up Document from XML String
 		    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -116,12 +142,11 @@ public class PasswordLibraryLoader extends AbstractPasswordLibraryLoader {
 		    doc.getDocumentElement().normalize();
 
 		    if(doc.hasChildNodes()) {
-		    	parseToPasswordLibrary(doc.getChildNodes());
+		    	parseToPasswordLibrary(doc.getChildNodes(), passwordLibrary);
 		    }
-		    
+		    System.out.println("Library successfully loaded!");
 	    } catch (Exception e) {
 	    	e.printStackTrace();
 	    }
-		//You can use the (plain-XML) example data in the root of the project to test the loader. 
 	}
 }
